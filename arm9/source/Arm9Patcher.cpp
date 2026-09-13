@@ -11,6 +11,7 @@
 #include "patches/arm9/sdk5/CardiReadCardWithHashInternalAsyncPatch.h"
 #include "patches/arm9/sdk5/CardiReadRomWithCpuPatch.h"
 #include "patches/arm9/CardiReadRomIdCorePatch.h"
+#include "patches/arm9/InputHookPatch.h"
 #include "patches/arm9/OSResetSystemPatch.h"
 #include "patches/arm9/PokemonDownloaderArm9Patch.h"
 #include "patches/arm9/DSProtectArm9Patch.h"
@@ -218,6 +219,10 @@ Arm9Patcher::PatchResult Arm9Patcher::ApplyPatches(const LoaderPlatform* loaderP
         }
 
         patchCollection.AddPatch(new CardiReadRomIdCorePatch());
+        if (romHeader->gameCode == GAMECODE("CPUE") && romHeader->softwareVersion == 1)
+        {
+            patchCollection.AddPatch(new InputHookPatch());
+        }
         osResetSystemPatch = new OSResetSystemPatch(loaderInfo, runInDSiMode);
         patchCollection.AddPatch(osResetSystemPatch);
         AddGamePatches(patchCollection, romHeader->gameCode, apListEntry);
