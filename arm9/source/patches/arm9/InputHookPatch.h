@@ -10,7 +10,7 @@ public:
 
 private:
     // TODO: make work for any game
-    static constexpr u32 kPatchTargetAddress = 0x02017bc2;
+    static constexpr u32 kPatchTargetAddress = 0x02017bc4;
 
     u32* _target = nullptr;
 };

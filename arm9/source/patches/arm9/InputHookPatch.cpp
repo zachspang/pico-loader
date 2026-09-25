@@ -4,7 +4,7 @@
 #include "InputHookPatchCode.h"
 #include "InputHookPatch.h"
 
-static const u32 sExpectedBytes[] = { 0x88014834u, 0x43018810u };
+static const u32 sExpectedBytes[] = { 0x88108801u, 0x48334301u };
 
 bool InputHookPatch::FindPatchTarget(PatchContext& patchContext)
 {
@@ -25,11 +25,8 @@ void InputHookPatch::ApplyPatch(PatchContext& patchContext)
     if (!_target)
         return;
 
-    auto readSectorsPatchCode = patchContext.GetLoaderPlatform()->CreateSdReadPatchCode(
-        patchContext.GetPatchCodeCollection(), patchContext.GetPatchHeap());
-
     auto patchCode = patchContext.GetPatchCodeCollection().AddUniquePatchCode<InputHookPatchCode>(
-        patchContext.GetPatchHeap(), readSectorsPatchCode, 0);
+        patchContext.GetPatchHeap());
 
     u32 hookAddr = (u32)patchCode->GetInputHookFunction();
     LOG_DEBUG("InputHookPatch allocated at 0x%X\n", hookAddr);
