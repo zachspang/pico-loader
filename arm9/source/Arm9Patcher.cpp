@@ -219,12 +219,9 @@ Arm9Patcher::PatchResult Arm9Patcher::ApplyPatches(const LoaderPlatform* loaderP
         }
 
         patchCollection.AddPatch(new CardiReadRomIdCorePatch());
-        if (romHeader->gameCode == GAMECODE("CPUE") && romHeader->softwareVersion == 1)
-        {
-            patchCollection.AddPatch(new InputHookPatch());
-        }
         osResetSystemPatch = new OSResetSystemPatch(loaderInfo, runInDSiMode);
         patchCollection.AddPatch(osResetSystemPatch);
+        patchCollection.AddPatch(new InputHookPatch());
         AddGamePatches(patchCollection, romHeader->gameCode, apListEntry);
 
         if (moduleParams && compressedEnd != 0)

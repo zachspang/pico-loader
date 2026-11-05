@@ -22,7 +22,8 @@ struct shared_memory_ntr_t
     u8 downloadParams[0x20];
     u8 bootCheckInfo[0x20];
     u32 resetParam;
-    u8 gap424[8];
+    u32 inputOverride;   // written by the arm7 input poll once per frame, read by the arm9 input hook
+    u32 arm7CardBusy;    // arm7 only: non zero while the arm7 save patch sends card commands, so the input poll skips itself
     u32 romOffset;
     u8 slot2Info[0xC];
     u32 vblankCounter;

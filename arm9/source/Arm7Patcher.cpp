@@ -17,6 +17,7 @@
 #include "patches/arm7/sdk5/Sdk5DsiSdCardRedirectPatch.h"
 #include "patches/arm7/PokemonDownloaderArm7Patch.h"
 #include "patches/arm7/cheats/CheatEnginePatch.h"
+#include "patches/arm7/InputOverridePollArm7Patch.h"
 #include "Arm7Patcher.h"
 
 static u32 correctAddress(u32 address, const nds_header_ntr_t* romHeader)
@@ -112,6 +113,8 @@ void* Arm7Patcher::ApplyPatches(const LoaderPlatform* loaderPlatform, u32 cheats
         {
             patchCollection.AddPatch(new DisableArm7WramClearPatch());
         }
+
+        patchCollection.AddPatch(new InputOverridePollArm7Patch((void*)romHeader->arm7LoadAddress, romHeader->arm7Size));
 
         if (sdkVersion.IsTwlSdk())
         {

@@ -42,6 +42,30 @@ public:
         return ((targetAddress & 1) ? 0xFA000000 : 0xEB000000) | ((offset >> 2) & 0xFFFFFF);
     }
 
+    /// @brief Create an ARM branch instruction (b).
+    /// @param instructionAddress The address where the instruction is to be placed.
+    /// @param targetAddress The ARM address to branch to.
+    /// @return The ARM branch instruction to jump to the target.
+    static u32 MakeArmBranch(u32 instructionAddress, u32 targetAddress)
+    {
+        u32 offset = targetAddress - instructionAddress - 8;
+        return 0xEA000000 | ((offset >> 2) & 0xFFFFFF);
+    }
+
+    /// @brief Create a Thumb call (bl or blx).
+    /// @param instructionAddress The address where the first Thumb instruction is to be placed.
+    /// @param targetAddress The address of the function to call. +1 if Thumb.
+    /// @return The two Thumb call instructions, the first in the low halfword.
+    static u32 MakeThumbCall(u32 instructionAddress, u32 targetAddress)
+    {
+        bool thumb = targetAddress & 1;
+        u32 pc = thumb ? instructionAddress + 4 : (instructionAddress + 4) & ~3;
+        u32 offset = (targetAddress & ~1) - pc;
+        u32 instruction1 = 0xF000 | ((offset >> 12) & 0x7FF);
+        u32 instruction2 = (thumb ? 0xF800 : 0xE800) | ((offset >> 1) & 0x7FF);
+        return instruction1 | (instruction2 << 16);
+    }
+
     /// @brief Get the offset of a Thumb call (bl or blx).
     /// @param callInstruction1 The first Thumb call instruction.
     /// @param callInstruction2 The second Thumb call instruction.

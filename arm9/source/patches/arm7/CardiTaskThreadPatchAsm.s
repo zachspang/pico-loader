@@ -66,7 +66,7 @@ read_backup:
     bl read_write_verify_backup_common
 
     ldr r0, __patch_carditaskthread_readsave_asm_address
-    bl blx_r0
+    bl busy_call
 
     b end_success
 
@@ -74,7 +74,7 @@ write_backup:
     bl read_write_verify_backup_common
 
     ldr r0, __patch_carditaskthread_writesave_asm_address
-    bl blx_r0
+    bl busy_call
 
     b end_success
 
@@ -83,7 +83,7 @@ verify_backup:
 
     push {r0}
     ldr r0, __patch_carditaskthread_verifysave_asm_address
-    bl blx_r0
+    bl busy_call
     pop {r1}
     str r0, [r1] // result
     b end_success
@@ -100,10 +100,28 @@ read_write_verify_backup_common:
         beq end_success
     bx lr
 
+// Calls r0(r1, r2, r3) with the arm7 card busy flag set, so the input override poll skips 
+// itself instead of colliding with the save commands.
+busy_call:
+    push {r0-r3,lr}
+    ldr r0, __patch_carditaskthread_card_busy_address
+    movs r1, #1
+    str r1, [r0]
+    pop {r0-r3}
+    bl blx_r0
+    ldr r1, __patch_carditaskthread_card_busy_address
+    movs r2, #0
+    str r2, [r1]
+    pop {pc}
+
 blx_r0:
     bx r0
 
 .balign 4
+
+.global __patch_carditaskthread_card_busy_address
+__patch_carditaskthread_card_busy_address:
+    .word 0
 
 .global __patch_carditaskthread_failoffset
 __patch_carditaskthread_failoffset:
