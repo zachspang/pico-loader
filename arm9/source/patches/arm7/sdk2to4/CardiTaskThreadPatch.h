@@ -22,8 +22,8 @@ public:
         ThumbF
     };
 
-    explicit CardiTaskThreadPatch(void* saveTmpBuffer)
-        : _saveTmpBuffer(saveTmpBuffer) { }
+    CardiTaskThreadPatch(void* saveTmpBuffer, u32* arm7CardBusy)
+        : _saveTmpBuffer(saveTmpBuffer), _arm7CardBusy(arm7CardBusy) { }
 
     bool FindPatchTarget(PatchContext& patchContext) override;
     void ApplyPatch(PatchContext& patchContext) override;
@@ -31,6 +31,7 @@ public:
 private:
     u32* _cardiTaskThread = nullptr;
     void* _saveTmpBuffer;
+    u32* _arm7CardBusy; // non zero while the save patch sends card commands
     PatchVariant _patchVariant = PatchVariant::None;
 
     void ApplyArmPatch(void* patch1Address) const;

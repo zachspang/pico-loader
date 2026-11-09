@@ -5,6 +5,7 @@
 
 INPUT_OVERRIDE_LOCK_ID = 0xBF // last arm7 lock id, should never be used by the game
 WAIT_BOUND = 0x800 // transfer wait timeout, irqs are disabled while waiting
+START_DELAY = 600 // number of polls to skip after boot
 
 // Replaces the final strh and pop {.., lr} of the XY mirror writer.
 // Polls the input override from the DSpico with command 0xEC and stores it in shared
@@ -21,6 +22,13 @@ inputoverridepollarm7_strh:
     mrs r7, cpsr
     orr r3, r7, #0x80
     msr cpsr_c, r3
+
+    // skip the first START_DELAY polls after boot
+    ldr r3, start_delay
+    cmp r3, #0
+    subne r3, r3, #1
+    strne r3, start_delay
+    bne end
 
     // skip when the arm7 save patch is using the card
     ldr r3, inputoverridepollarm7_card_busy_addr
@@ -94,6 +102,8 @@ inputoverridepollarm7_strh:
     strh r1, [r2, #0x8] // restore REG_AUXSPICNT
     cmp r0, #0
     mvneq r0, #0 // 0 (no DSpico) becomes 0xFFFFFFFF, no override
+    ldr r3, =0xFFFFF000
+    orr r0, r0, r3 // only buttons A to Y (bits 0-11) can be overridden
     ldr r3, inputoverridepollarm7_override_addr
     str r0, [r3]
     b unlock
@@ -141,6 +151,9 @@ inputoverridepollarm7_lock_addr:
 .global inputoverridepollarm7_card_busy_addr
 inputoverridepollarm7_card_busy_addr:
     .word 0
+
+start_delay:
+    .word START_DELAY // counts down to 0
 
 .pool
 .end

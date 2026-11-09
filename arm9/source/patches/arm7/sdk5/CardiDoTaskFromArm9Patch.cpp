@@ -1,5 +1,4 @@
 #include "common.h"
-#include "sharedMemory.h"
 #include "patches/PatchContext.h"
 #include "thumbInstructions.h"
 #include "fileInfo.h"
@@ -92,7 +91,7 @@ void CardiDoTaskFromArm9Patch::ApplyPatch(PatchContext& patchContext)
     __patch_carditaskthread_readsave_asm_address = (u32)readSavePatchCode->GetReadSaveFunction();
     __patch_carditaskthread_writesave_asm_address = (u32)writeSavePatchCode->GetWriteSaveFunction();
     __patch_carditaskthread_verifysave_asm_address = (u32)verifySavePatchCode->GetVerifySaveFunction();
-    __patch_carditaskthread_card_busy_address = (u32)&NTR_SHARED_MEMORY_SDK5->arm7CardBusy;
+    __patch_carditaskthread_card_busy_address = (u32)_arm7CardBusy;
     if (loaderPlatform->GetPlatformType() == LoaderPlatformType::Slot1)
     {
         // Test REG_EXMEMSTAT bit 11

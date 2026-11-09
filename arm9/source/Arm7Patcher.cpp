@@ -100,6 +100,9 @@ void* Arm7Patcher::ApplyPatches(const LoaderPlatform* loaderPlatform, u32 cheats
 
         patchContext.GetPatchHeap().AddFreeSpace(patchSpaceStart, arm7PatchSpaceSize);
 
+        // used by the input override poll and the save patches
+        u32* arm7CardBusy = (u32*)patchContext.GetPatchHeap().Alloc(sizeof(u32));
+
         if (cheatsLength > 0)
         {
             void* cheats = (void*)correctAddress(mainMemoryArenaLo, romHeader);
@@ -114,7 +117,7 @@ void* Arm7Patcher::ApplyPatches(const LoaderPlatform* loaderPlatform, u32 cheats
             patchCollection.AddPatch(new DisableArm7WramClearPatch());
         }
 
-        patchCollection.AddPatch(new InputOverridePollArm7Patch((void*)romHeader->arm7LoadAddress, romHeader->arm7Size));
+        patchCollection.AddPatch(new InputOverridePollArm7Patch((void*)romHeader->arm7LoadAddress, romHeader->arm7Size, arm7CardBusy));
 
         if (sdkVersion.IsTwlSdk())
         {
@@ -138,14 +141,14 @@ void* Arm7Patcher::ApplyPatches(const LoaderPlatform* loaderPlatform, u32 cheats
             {
                 void* saveTmpBuffer = (void*)correctAddress(mainMemoryArenaLo, romHeader);
                 mainMemoryArenaLo += 512;
-                patchCollection.AddPatch(new CardiDoTaskFromArm9Patch(saveTmpBuffer));
+                patchCollection.AddPatch(new CardiDoTaskFromArm9Patch(saveTmpBuffer, arm7CardBusy));
             }
         }
         else
         {
             void* saveTmpBuffer = (void*)correctAddress(mainMemoryArenaLo, romHeader);
             mainMemoryArenaLo += 512;
-            patchCollection.AddPatch(new CardiTaskThreadPatch(saveTmpBuffer));
+            patchCollection.AddPatch(new CardiTaskThreadPatch(saveTmpBuffer, arm7CardBusy));
         }
 
         if (*(vu32*)0x02FFF00C == GAMECODE("ADAJ") &&

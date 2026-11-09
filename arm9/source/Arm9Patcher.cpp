@@ -103,7 +103,8 @@ Arm9Patcher::PatchResult Arm9Patcher::ApplyPatches(const LoaderPlatform* loaderP
                 }
             }
 
-            if (sdkVersion.IsTwlSdk())
+            // sdk5 autoload entries are only used by dsi mode builds
+            if (sdkVersion.IsTwlSdk() && romHeader->SupportsDsiMode())
             {
                 arm9Autoload = std::make_unique<AutoloadAdjuster<autoload_list_entry_sdk5_t>>(
                     (autoload_list_entry_sdk5_t*)moduleParams->autoloadListStart,
@@ -221,7 +222,7 @@ Arm9Patcher::PatchResult Arm9Patcher::ApplyPatches(const LoaderPlatform* loaderP
         patchCollection.AddPatch(new CardiReadRomIdCorePatch());
         osResetSystemPatch = new OSResetSystemPatch(loaderInfo, runInDSiMode);
         patchCollection.AddPatch(osResetSystemPatch);
-        patchCollection.AddPatch(new InputHookPatch());
+        patchCollection.AddPatch(new InputHookPatch((void*)romHeader->arm9LoadAddress, arm9Size, runInDSiMode));
         AddGamePatches(patchCollection, romHeader->gameCode, apListEntry);
 
         if (moduleParams && compressedEnd != 0)

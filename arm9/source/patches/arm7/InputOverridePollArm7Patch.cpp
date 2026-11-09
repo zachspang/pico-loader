@@ -5,19 +5,7 @@
 #include "InputOverridePollArm7PatchCode.h"
 #include "InputOverridePollArm7Patch.h"
 
-static constexpr u32 XY_MIRROR_ADDRESS_NTR = 0x027FFFA8;
-static constexpr u32 XY_MIRROR_ADDRESS_SDK5 = 0x02FFFFA8;
 static constexpr u32 REG_KEYXY_ADDRESS = 0x04000136;
-
-// offsets in shared memory, the addresses are derived from the mirror address the game uses
-static constexpr u32 XY_MIRROR_OFFSET = 0x7A8;
-static constexpr u32 INPUT_OVERRIDE_OFFSET = 0x424;
-static constexpr u32 ARM7_CARD_BUSY_OFFSET = 0x428;
-static constexpr u32 SLOT1_LOCK_OFFSET = 0x7E0;
-
-static_assert(offsetof(shared_memory_ntr_t, inputOverride) == INPUT_OVERRIDE_OFFSET);
-static_assert(offsetof(shared_memory_ntr_t, arm7CardBusy) == ARM7_CARD_BUSY_OFFSET);
-
 static constexpr u32 SEARCH_DISTANCE = 16; // instructions
 
 // ldr rd, [pc, #imm]
@@ -67,7 +55,7 @@ bool InputOverridePollArm7Patch::FindPatchTarget(PatchContext& patchContext)
         // ldr rn, =XY mirror address
         u32 mirror;
         if (!readArmLiteral(address, begin, end, mirror)
-            || (mirror != XY_MIRROR_ADDRESS_NTR && mirror != XY_MIRROR_ADDRESS_SDK5))
+            || (mirror != (u32)&NTR_SHARED_MEMORY->padXYBuffer && mirror != (u32)&NTR_SHARED_MEMORY_SDK5->padXYBuffer))
         {
             continue;
         }
@@ -109,9 +97,9 @@ bool InputOverridePollArm7Patch::FindPatchTarget(PatchContext& patchContext)
 
         matches++;
         _site = (u32*)strh;
-        _overrideAddr = mirror - XY_MIRROR_OFFSET + INPUT_OVERRIDE_OFFSET;
-        _cardBusyAddr = mirror - XY_MIRROR_OFFSET + ARM7_CARD_BUSY_OFFSET;
-        _lockAddr = mirror - XY_MIRROR_OFFSET + SLOT1_LOCK_OFFSET;
+        u32 ntrSharedMem = mirror - offsetof(shared_memory_ntr_t, padXYBuffer);
+        _overrideAddr = ntrSharedMem - offsetof(shared_memory_twl_t, ntrSharedMem) + offsetof(shared_memory_twl_t, inputOverride);
+        _lockAddr = ntrSharedMem + offsetof(shared_memory_ntr_t, slot1Lock);
         LOG_DEBUG("InputOverridePollArm7: XY mirror store at 0x%p\n", _site);
     }
 
@@ -136,8 +124,8 @@ void InputOverridePollArm7Patch::ApplyPatch(PatchContext& patchContext)
     inputoverridepollarm7_pop = _site[1];
     inputoverridepollarm7_override_addr = _overrideAddr;
     inputoverridepollarm7_lock_addr = _lockAddr;
-    inputoverridepollarm7_card_busy_addr = _cardBusyAddr;
-    *(u32*)_cardBusyAddr = 0; // no save in progress at boot
+    inputoverridepollarm7_card_busy_addr = (u32)_arm7CardBusy;
+    *_arm7CardBusy = 0; // no save in progress at boot
 
     _site[0] = 0xE51FF004; // ldr pc,= entryAddress
     _site[1] = (u32)patchCode->GetEntry();
